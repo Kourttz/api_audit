@@ -1,0 +1,77 @@
+version: '3.9'
+
+services:
+  api_auditoria:
+    image: ${IMAGE_TAG}
+    container_name: api_auditoria
+    restart: unless-stopped
+    depends_on:
+      db_auditoria:
+        condition: service_healthy
+    networks:
+      - internal_network
+      - kong-network
+      - kafka-net
+    ports:
+      - "9001:8080"
+    environment:
+      - API_PREFIX=${API_PREFIX} # Prefixo para as rotas da API
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_HOST=${DB_HOST}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=${DB_PORT}
+      - JWT_SECRET=${JWT_SECRET}
+      - DB_USERNAME=${DB_USERNAME}
+      - PORT=${PORT}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    command: >
+      sh -c "echo '[API] Aguardando DB (Max 30s)...' &&
+        /usr/bin/env sh -c 'i=0; while ! nc -z ${DB_HOST} ${DB_PORT} && [ $$i -lt 30 ]; do sleep 1; i=$$(($$i+1)); done' &&
+        if [ $$? -ne 0 ]; then echo 'Erro: Timeout aguardando DB'; exit 1; fi &&
+        echo '[API] Executando migrations...' &&
+        npx typeorm-ts-node-commonjs migration:run -d dist/data_source.js &&
+        echo '[API] Executando seeds...' &&
+        npm run seed &&
+        echo '[API] Iniciando aplicação...' &&
+        npm run start:prod"
+    
+
+  db_auditoria:
+    image: postgres:15
+    container_name: api_auditoria_db
+    restart: unless-stopped
+    ports:
+      - "7001:5432"
+    environment:
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_DATABASE}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - internal_network
+      - kafka-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    command: postgres -c wal_level=logical -c max_replication_slots=10 -c max_wal_senders=10
+
+
+volumes:
+  pgdata:
+
+networks:
+  internal_network:
+    driver: bridge
+  kong-network:
+    external: true
+  kafka-net:
+    external: true
+    name: empregados-plansul-network

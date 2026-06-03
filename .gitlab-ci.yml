@@ -1,0 +1,4 @@
+include:
+  - project: 'workforce/ci-templates'
+    ref: v1.0.0
+    file: '/.gitlab-ci.yml'
