@@ -6,11 +6,12 @@ import { AuthModule } from '../../common/auth/auth.module';
 import { AuditoriaController } from './auditoria.controller';
 import { AuditoriaService } from './auditoria.service';
 import { TokenModule } from '../../common/token/token.module';
+import { InfluxDbService } from './influxdb.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Auditoria]), forwardRef(() => AuthModule), TokenModule, HttpModule],
   controllers: [AuditoriaController], // Adicione aqui
-  providers: [AuditoriaService],
+  providers: [AuditoriaService, InfluxDbService],
   exports: [AuditoriaService],
 })
 export class AuditoriaModule {}

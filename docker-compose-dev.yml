@@ -63,9 +63,29 @@ services:
       retries: 10
     command: postgres -c wal_level=logical -c max_replication_slots=10 -c max_wal_senders=10
 
+  influxdb:
+    image: influxdb:2.7
+    container_name: api_auditoria_influxdb
+    restart: unless-stopped
+    ports:
+      - "2001:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=adminpassword
+      - DOCKER_INFLUXDB_INIT_ORG=plansul
+      - DOCKER_INFLUXDB_INIT_BUCKET=monitoramento_acessos
+      - DOCKER_INFLUXDB_INIT_RETENTION=30d
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=my-super-secret-auth-token
+    volumes:
+      - influxdb2_data:/var/lib/influxdb2
+    networks:
+      - internal_network
+      - kong-network
 
 volumes:
   pgdata:
+  influxdb2_data:
 
 networks:
   internal_network:

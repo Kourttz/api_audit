@@ -9,6 +9,7 @@ import { firstValueFrom } from 'rxjs';
 import * as fs from 'fs/promises'; 
 import { existsSync } from 'fs';   
 import * as path from 'path';
+import { InfluxDbService } from './influxdb.service';
 
 @Injectable()
 export class AuditoriaService {
@@ -18,7 +19,8 @@ export class AuditoriaService {
   constructor(
     @InjectRepository(Auditoria)
     private readonly auditoriaRepository: Repository<Auditoria>,
-    private readonly http: HttpService
+    private readonly http: HttpService,
+    private readonly influxDbService: InfluxDbService
   ) {}
 
   /**
@@ -43,6 +45,14 @@ export class AuditoriaService {
    */
   async create(dados: any): Promise<Auditoria> {
     try {
+      // Envia para o InfluxDB de forma assíncrona
+      this.influxDbService.writeLog(dados);
+
+      // Não salva no Postgres se for apenas VISUALIZAR
+      if (dados.tpAcao === 'VISUALIZAR') {
+        return {} as Auditoria;
+      }
+
       const log = this.auditoriaRepository.create({
         noSistema: dados.noSistema,
         noFuncionalidade: dados.noFuncionalidade,
@@ -93,6 +103,14 @@ export class AuditoriaService {
    */
   async salvarLog(payload: any): Promise<void> {
     try {
+      // Envia para o InfluxDB de forma assíncrona
+      this.influxDbService.writeLog(payload);
+
+      // Não salva no Postgres se for apenas VISUALIZAR
+      if (payload.tp_acao === 'VISUALIZAR') {
+         return;
+      }
+
       const novoLog = this.auditoriaRepository.create({
         noSistema: payload.no_sistema,
         noFuncionalidade: payload.no_funcionalidade,

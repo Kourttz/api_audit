@@ -63,7 +63,7 @@ api_auditoria/
 1. **Clone o repositório**
 
 ```bash
-git clone https://github.com/Kourttz/api_audit.git
+git clone http://172.32.1.71/gitlab/workforce/api_auditoria.git
 ```
 
 2. **Instale as dependências**
@@ -80,13 +80,13 @@ PORT=3005
 # Banco de Dados
 DB_HOST=localhost
 DB_PORT=5432
-DB_DATABASE=database
-DB_USERNAME=seuusername
+DB_DATABASE=auditoria
+DB_USERNAME=postgres
 DB_PASSWORD=suasenha
 
 # Kafka
-KAFKA_BROKER=localhost:8000
-KAFKA_TOPIC=topic_auditoria_nome
+KAFKA_BROKER=localhost:9092
+KAFKA_TOPIC=topic_auditoria_geral
 
 # Segurança
 JWT_SECRET=seu_segredo_jwt
@@ -167,8 +167,8 @@ As APIs que desejam se integrar devem configurar as seguintes variáveis:
 URL_API_AUDITORIA=http://api_auditoria:8080/auditoria
 
 # Se for integrar via Kafka
-KAFKA_BROKERS=kafka:8000
-TOPIC_AUDITORIA=auditoria_acoes_nome
+KAFKA_BROKERS=kafka:29092
+TOPIC_AUDITORIA=auditoria_acoes_topic
 ```
 
 
